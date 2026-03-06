@@ -315,7 +315,7 @@ header h1 em {
 .decade-summary {
  font-size: 0.75rem;
  line-height: 1.7;
- color: var(--dim);
+ color: var(--ink);
  max-width: 640px;
 }
 
@@ -444,7 +444,7 @@ header h1 em {
 .event-body {
  font-size: 0.7rem;
  line-height: 1.7;
- color: var(--dim);
+ color: var(--ink);
 }
 
 .event-body strong { color: var(--ink); font-weight: 500; }
@@ -505,7 +505,7 @@ header h1 em {
 .relevance-bridge p {
  font-size: 0.7rem;
  line-height: 1.7;
- color: var(--dim);
+ color: var(--ink);
 }
 
 /* Selected event detail panel */
@@ -1326,6 +1326,12 @@ function filterField(field) {
 
   const allCards = document.querySelectorAll('.event-card');
   const allBlocks = document.querySelectorAll('.decade-block');
+
+  // Scroll to first matching decade block
+  setTimeout(() => {
+    const firstMatch = document.querySelector('.decade-block:not(.dimmed)');
+    if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
 
   if (field === 'all') {
     allBlocks.forEach(b => b.classList.remove('dimmed'));

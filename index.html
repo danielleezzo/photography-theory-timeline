@@ -220,6 +220,16 @@ header h1 em {
  max-width: 120px;
 }
 
+.reading-field-label {
+ font-family: 'IBM Plex Mono', monospace;
+ font-size: 0.55rem;
+ text-transform: uppercase;
+ letter-spacing: 0.08em;
+ color: var(--accent);
+ margin-bottom: 0.6rem;
+}
+
+
 .reading-list {
  list-style: none;
  display: flex;
@@ -228,6 +238,7 @@ header h1 em {
 }
 
 .reading-list li {
+ font-family: 'IBM Plex Sans', sans-serif;
  font-size: 0.65rem;
  line-height: 1.5;
  color: var(--dim);
@@ -237,7 +248,7 @@ header h1 em {
 }
 
 .reading-list li:hover { border-left-color: var(--accent); color: var(--ink); }
-.reading-list li strong { display: block; color: var(--ink); font-weight: 500; }
+.reading-list li strong { display: block; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.65rem; color: var(--ink); font-weight: 500; }
 
 /* ── MAIN TIMELINE ── */
 .main {
@@ -760,20 +771,8 @@ header h1 em {
  </div>
  <div class="sidebar-section">
  <div class="sidebar-label">Where to start reading</div>
- <ul class="reading-list">
- <li><strong>Rosalind Krauss, "Photography's Discursive Spaces" (1982)</strong> Art Journal, shows how photo theory positioned itself against art history</li>
- <li><strong>Victor Burgin, ed., Thinking Photography (1982)</strong> The anthology that consolidated the semiotic turn in photo theory</li>
- <li><strong>October, Vol. 1 (1976)</strong> Read the editorial; it states exactly what the founders thought was missing</li>
- <li><strong>Stuart Hall, "Encoding/Decoding" (1980)</strong> The foundational text for how media studies handled the image</li>
- <li><strong>W.J.T. Mitchell, "What is an Image?" (1984)</strong> New Literary History, the cross-disciplinary synthesis moment</li>
- <li><strong>Lev Manovich, The Language of New Media (2001)</strong> Introduction only, maps the computational turn</li>
- <li><strong>Derrida, "Structure, Sign and Play" (1966)</strong> 20 pages, the clearest entry into post-structuralism</li>
- <li><strong>Laura Mulvey, "Visual Pleasure and Narrative Cinema" (1975)</strong> Screen, the foundational feminist gaze essay</li>
- <li><strong>Donna Haraway, "A Cyborg Manifesto" (1985)</strong> Most relevant precursor to thinking about human-AI creative collaboration</li>
- <li><strong>Foucault, "What is an Author?" (1969)</strong> Direct precursor to every AI authorship question</li>
- <li><strong>Karen Barad, "Posthumanist Performativity" (2003)</strong> Signs journal, accessible intro to intra-action without the full book</li>
- <li><strong>Edward Said, Orientalism (1978)</strong> Introduction only, maps the postcolonial critique of representation</li>
- </ul>
+ <div class="reading-field-label" id="reading-field-label">All fields</div>
+ <ul class="reading-list" id="reading-list"></ul>
  </div>
  </aside>
 
@@ -1466,6 +1465,9 @@ function filterField(field) {
   const allCards = document.querySelectorAll('.event-card');
   const allBlocks = document.querySelectorAll('.decade-block');
 
+  // Update reading list for this field
+  renderReadingList(field);
+
   // Scroll to first matching decade block
   setTimeout(() => {
     const firstMatch = document.querySelector('.decade-block:not(.dimmed)');
@@ -1510,7 +1512,135 @@ function filterField(field) {
   });
 }
 
-// Intersection observer for sidebar nav highlighting while scrolling
+
+// ── READING LIST DATA ──
+const readingLists = {
+  all: {
+    label: 'All fields — a suggested path through the landscape',
+    items: [
+      { title: 'Rosalind Krauss, "Photography\'s Discursive Spaces" (1982)', note: 'Start here. Shows how photo theory defined itself against art history.' },
+      { title: 'Victor Burgin, ed., Thinking Photography (1982)', note: 'The anthology that consolidated the semiotic turn. Read the introduction.' },
+      { title: 'Roland Barthes, Camera Lucida (1980)', note: 'The most read text in photo theory. Come to it after Burgin, not before.' },
+      { title: 'Stuart Hall, "Encoding/Decoding" (1980)', note: 'Foundational for how media studies handled the image and meaning.' },
+      { title: 'W.J.T. Mitchell, "What is an Image?" (1984)', note: 'New Literary History. The cross-disciplinary synthesis moment.' },
+      { title: 'Lev Manovich, The Language of New Media (2001)', note: 'Introduction only. Maps the computational turn clearly.' },
+      { title: 'Donna Haraway, "A Cyborg Manifesto" (1985)', note: 'The most useful precursor to thinking about human-AI collaboration.' },
+    ]
+  },
+  photo: {
+    label: 'Photo Theory — suggested reading sequence',
+    items: [
+      { title: 'Walter Benjamin, "A Little History of Photography" (1931)', note: 'Start here, not with the "Work of Art" essay. More specific to photography.' },
+      { title: 'Siegfried Kracauer, "Photography" (1927)', note: 'Underread. Anticipates Barthes by fifty years on the question of meaning.' },
+      { title: 'Victor Burgin, ed., Thinking Photography (1982)', note: 'The anthology that formed the field. Read the introduction and Burgin\'s own essay.' },
+      { title: 'Rosalind Krauss, "Photography\'s Discursive Spaces" (1982)', note: 'Art Journal. How photo theory positioned itself institutionally.' },
+      { title: 'Roland Barthes, Camera Lucida (1980)', note: 'Read after the above, not as an entry point. It lands differently with context.' },
+      { title: 'Allan Sekula, "The Body and the Archive" (1986)', note: 'October. The essential Foucauldian reading of photography\'s institutional history.' },
+      { title: 'Vilém Flusser, Towards a Philosophy of Photography (1983)', note: 'Short. The apparatus concept is the most useful thing in it.' },
+    ]
+  },
+  semio: {
+    label: 'Semiotics — suggested reading sequence',
+    items: [
+      { title: 'Ferdinand de Saussure, Course in General Linguistics (1916)', note: 'Introduction and Part One only. Establishes sign, signifier, signified.' },
+      { title: 'Roland Barthes, "Rhetoric of the Image" (1964)', note: 'In Image-Music-Text. The direct application of semiotics to photography.' },
+      { title: 'Umberto Eco, "Towards a Semiotic Inquiry into the Television Message" (1972)', note: 'Shows how the semiotic framework extends to media images.' },
+      { title: 'Charles Sanders Peirce, "Logic as Semiotic" (1897)', note: 'Excerpts only. The icon/index/symbol distinction is what you need.' },
+      { title: 'Stuart Hall, "Encoding/Decoding" (1980)', note: 'Where semiotics meets ideology and media practice.' },
+      { title: 'Victor Burgin, ed., Thinking Photography (1982)', note: 'The anthology that brought semiotics fully into photo theory.' },
+    ]
+  },
+  media: {
+    label: 'Media Studies — suggested reading sequence',
+    items: [
+      { title: 'Marshall McLuhan, Understanding Media (1964)', note: 'Introduction only. "The medium is the message" needs its actual context.' },
+      { title: 'Stuart Hall, "Encoding/Decoding" (1980)', note: 'The foundational text. Short, dense, essential.' },
+      { title: 'Raymond Williams, Television: Technology and Cultural Form (1974)', note: 'Chapter 1. The best early account of how technology shapes cultural form.' },
+      { title: 'Friedrich Kittler, Gramophone, Film, Typewriter (1986)', note: 'Introduction only. The media archaeology approach in its clearest form.' },
+      { title: 'Lev Manovich, The Language of New Media (2001)', note: 'Introduction and Chapter 1. Maps the shift from cinema to software logic.' },
+      { title: 'W.J.T. Mitchell, "What is an Image?" (1984)', note: 'New Literary History. The cross-disciplinary bridge moment.' },
+    ]
+  },
+  art: {
+    label: 'Art Theory — suggested reading sequence',
+    items: [
+      { title: 'Clement Greenberg, "Modernist Painting" (1960)', note: 'The position that photo theory spent the 1970s arguing against. Read it first.' },
+      { title: 'October, Vol. 1 (1976)', note: 'Read the editorial. It states exactly what the founders thought was missing from art criticism.' },
+      { title: 'Rosalind Krauss, "Sculpture in the Expanded Field" (1979)', note: 'October. The expanded field concept that photo theory borrowed and adapted.' },
+      { title: 'Rosalind Krauss, "Photography\'s Discursive Spaces" (1982)', note: 'The direct application to photography. Read after the above.' },
+      { title: 'Douglas Crimp, "The Photographic Activity of Postmodernism" (1980)', note: 'October. How appropriation art used photography to challenge modernist categories.' },
+      { title: 'Benjamin Buchloh, "Allegorical Procedures" (1982)', note: 'Artforum. The institutional critique framework applied to postmodern photography.' },
+    ]
+  },
+  ai: {
+    label: 'AI / Computational Culture — suggested reading sequence',
+    items: [
+      { title: 'Lev Manovich, The Language of New Media (2001)', note: 'Start here. Establishes the database and algorithm as cultural forms.' },
+      { title: 'Foucault, "What is an Author?" (1969)', note: 'Short. The direct precursor to every AI authorship question.' },
+      { title: 'Donna Haraway, "A Cyborg Manifesto" (1985)', note: 'The most generative precursor for thinking about human-machine hybridity.' },
+      { title: 'Kate Crawford and Trevor Paglen, "Excavating AI" (2019)', note: 'excavating.ai. The politics of training sets. Free online.' },
+      { title: 'Hito Steyerl, "In Defense of the Poor Image" (2009)', note: 'e-flux. Short. The most useful account of image circulation and degradation.' },
+      { title: 'Antonio Somaini, "Algorithmic Images" (2023)', note: 'Grey Room no. 93. The most current theoretical account of AI and visual culture.' },
+    ]
+  },
+  phenom: {
+    label: 'Phenomenology — suggested reading sequence',
+    items: [
+      { title: 'Merleau-Ponty, "Eye and Mind" (1960)', note: 'Start here, not with Phenomenology of Perception. Shorter and specifically about vision.' },
+      { title: 'Edmund Husserl, "Phenomenology" (1927)', note: 'The Encyclopaedia Britannica article. The clearest short account of the method.' },
+      { title: 'Merleau-Ponty, Phenomenology of Perception (1945)', note: 'Introduction and Chapter 1 only. Establishes the body as the ground of perception.' },
+      { title: 'Don Ihde, Technics and Praxis (1979)', note: 'The application of phenomenology to technology. Direct precursor to camera-body relations.' },
+      { title: 'Laura Marks, The Skin of the Film (2000)', note: 'Chapter 1. Brings phenomenology and haptics into film and media theory.' },
+    ]
+  },
+  fem: {
+    label: 'Feminist / Queer Theory — suggested reading sequence',
+    items: [
+      { title: 'Laura Mulvey, "Visual Pleasure and Narrative Cinema" (1975)', note: 'Start here. Screen. The foundational gaze essay. Short and exact.' },
+      { title: 'Judith Butler, Gender Trouble (1990)', note: 'Preface and Chapter 1 only. Establishes performativity without the full complexity.' },
+      { title: 'bell hooks, "The Oppositional Gaze" (1992)', note: 'In Black Looks. The essential counter to Mulvey on race and the gaze.' },
+      { title: 'Griselda Pollock, Vision and Difference (1988)', note: 'Chapter 3. Feminist art history meets semiotics and psychoanalysis.' },
+      { title: 'Lisa Cartwright, Screening the Body (1995)', note: 'Introduction. Feminist media studies applied to scientific and medical imaging.' },
+      { title: 'José Muñoz, Cruising Utopia (2009)', note: 'Introduction. The queer futurity framework, relevant to speculative image practices.' },
+    ]
+  },
+  postcol: {
+    label: 'Postcolonial Theory — suggested reading sequence',
+    items: [
+      { title: 'Edward Said, Orientalism (1978)', note: 'Introduction only. The foundational argument about representation and power.' },
+      { title: 'Frantz Fanon, Black Skin, White Masks (1952)', note: 'Chapter 5 only. The phenomenology of race and the colonial gaze.' },
+      { title: 'Stuart Hall, "The Spectacle of the Other" (1997)', note: 'In Representation (ed. Hall). The most direct application to visual culture.' },
+      { title: 'Allan Sekula, "The Body and the Archive" (1986)', note: 'October. Connects photography\'s institutional history to colonial classification.' },
+      { title: 'Ariella Azoulay, The Civil Contract of Photography (2008)', note: 'Introduction. Rethinks the political obligations of photographic spectatorship.' },
+      { title: 'Tina Campt, Listening to Images (2017)', note: 'Chapter 1. Quiet photography and the politics of Black visual culture.' },
+    ]
+  },
+  newmat: {
+    label: 'New Materialism — suggested reading sequence',
+    items: [
+      { title: 'Karen Barad, "Posthumanist Performativity" (2003)', note: 'Signs journal. The most accessible entry into intra-action without the full book.' },
+      { title: 'Jane Bennett, Vibrant Matter (2010)', note: 'Preface and Chapter 1. Thing-power as a starting point.' },
+      { title: 'Bruno Latour, "On Actor-Network Theory" (1996)', note: 'Short article. Clearer than Reassembling the Social as an entry point.' },
+      { title: 'Donna Haraway, "Situated Knowledges" (1988)', note: 'Feminist Studies. The partial perspective argument that grounds new materialism.' },
+      { title: 'Karen Barad, Meeting the Universe Halfway (2007)', note: 'Introduction and Chapter 1 only after reading the 2003 article.' },
+      { title: 'Rosi Braidotti, The Posthuman (2013)', note: 'Chapter 1. Maps the posthumanist landscape and its stakes for media theory.' },
+    ]
+  }
+};
+
+function renderReadingList(field) {
+  const data = readingLists[field] || readingLists['all'];
+  document.getElementById('reading-field-label').textContent = data.label;
+  const ul = document.getElementById('reading-list');
+  ul.innerHTML = data.items.map(item =>
+    `<li><strong>${item.title}</strong>${item.note}</li>`
+  ).join('');
+}
+
+// Initialize reading list on load
+renderReadingList('all');
+
+
 const observer = new IntersectionObserver((entries) => {
  entries.forEach(entry => {
  if (entry.isIntersecting) {
